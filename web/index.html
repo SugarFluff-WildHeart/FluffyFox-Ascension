@@ -1,0 +1,969 @@
+<!doctype html>
+
+<html lang="en" data-addon-id="fluffyfox-ascension">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>FluffyFox Ascension</title>
+
+  <link
+    rel="icon"
+    href="./assets/vixens.ico"
+    sizes="any"
+  />
+
+  <link
+    rel="icon"
+    href="./assets/vixens-crest.png"
+    type="image/png"
+  />
+
+  <link
+    rel="stylesheet"
+    href="./addon.css"
+  />
+
+</head>
+
+
+<body>
+
+  <main class="shell">
+
+
+    <!-- =========================================================
+         TOP HEADER
+         ========================================================= -->
+
+    <header class="header panel">
+
+      <div class="brand-line">
+
+        <img
+          class="brand-crest"
+          src="./assets/vixens-crest.png"
+          alt="FluffyFox Ascension"
+        />
+
+        <div class="brand-copy">
+
+          <p class="eyebrow">
+            DUNE DOCKER CONSOLE ADDON
+          </p>
+
+          <h1>
+            FluffyFox Ascension
+          </h1>
+
+          <p class="muted header-subtitle">
+
+            <span id="serverName">
+              Server
+            </span>
+
+            <span class="separator">
+              ·
+            </span>
+
+            Seasonal progression and automatic rewards.
+
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- =======================================================
+           TOP CONTROLS
+           ======================================================= -->
+
+      <div class="top-controls">
+
+        <div class="interface-controls">
+
+
+          <div class="interface-title">
+
+            <span class="interface-icon">
+              ✦
+            </span>
+
+            <div>
+
+              <span class="interface-label">
+                Interface
+              </span>
+
+              <span class="interface-hint">
+                Local display settings
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <label class="compact-control">
+
+            <span>
+              Opacity
+            </span>
+
+            <output
+              id="opacityValue"
+              for="backgroundOpacity"
+            >
+              82%
+            </output>
+
+            <input
+              id="backgroundOpacity"
+              type="range"
+              min="35"
+              max="96"
+              value="82"
+            />
+
+          </label>
+
+
+          <label class="compact-control">
+
+            <span>
+              Glass Blur
+            </span>
+
+            <output
+              id="blurValue"
+              for="backgroundBlur"
+            >
+              12px
+            </output>
+
+            <input
+              id="backgroundBlur"
+              type="range"
+              min="4"
+              max="28"
+              value="12"
+            />
+
+          </label>
+
+
+          <label class="compact-select">
+
+            <span>
+              Text
+            </span>
+
+            <select id="colorPreset">
+
+              <option value="gold">
+                Fluffy Gold
+              </option>
+
+              <option value="cyan">
+                Fox Cyan
+              </option>
+
+              <option value="pink">
+                Vixen Pink
+              </option>
+
+              <option value="green">
+                Status Green
+              </option>
+
+              <option value="purple">
+                Twilight Purple
+              </option>
+
+              <option value="warm">
+                Desert Warm
+              </option>
+
+            </select>
+
+          </label>
+
+
+          <label class="compact-select">
+
+            <span>
+              Refresh
+            </span>
+
+            <select id="refreshInterval">
+
+              <option value="0">
+                Off
+              </option>
+
+              <option value="5">
+                5 sec
+              </option>
+
+              <option value="10">
+                10 sec
+              </option>
+
+              <option
+                value="30"
+                selected
+              >
+                30 sec
+              </option>
+
+              <option value="60">
+                60 sec
+              </option>
+
+            </select>
+
+          </label>
+
+        </div>
+
+
+        <div class="actions">
+
+          <button
+            id="initialize"
+            type="button"
+          >
+            Initialize
+          </button>
+
+          <button
+            id="refresh"
+            class="secondary"
+            type="button"
+          >
+            Refresh
+          </button>
+
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- =========================================================
+         ACTIVE SEASON
+         ========================================================= -->
+
+    <section class="hero panel">
+
+      <div class="hero-main">
+
+        <p class="eyebrow">
+          Active Season
+        </p>
+
+        <h2 id="seasonName">
+          Loading season…
+        </h2>
+
+        <p
+          id="seasonDates"
+          class="muted"
+        >
+          Loading season details…
+        </p>
+
+
+        <div class="season-progress">
+
+          <div class="progress-label">
+
+            <span>
+              Season XP
+            </span>
+
+            <strong id="xpValue">
+              0 XP
+            </strong>
+
+          </div>
+
+
+          <div class="progress-track">
+
+            <div
+              id="xpBar"
+              class="progress-fill"
+            ></div>
+
+          </div>
+
+
+          <div class="progress-meta">
+
+            <span id="xpNext">
+              Loading next tier…
+            </span>
+
+            <span id="seasonProgressPercent">
+              0%
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="hero-actions">
+
+        <label for="playerSelect">
+          Player
+        </label>
+
+        <select
+          id="playerSelect"
+          aria-label="Player"
+        ></select>
+
+
+        <div class="sync-box">
+
+          <span class="sync-label">
+            Level
+          </span>
+
+          <strong id="playerLevel">
+            —
+          </strong>
+
+        </div>
+
+
+        <button
+          id="syncLevel"
+          type="button"
+          class="sync-button"
+        >
+          Sync Level XP
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         STATS
+         ========================================================= -->
+
+    <section
+      class="stats"
+      aria-label="Season progress"
+    >
+
+      <article class="stat">
+
+        <span>
+          Current Tier
+        </span>
+
+        <strong id="currentTier">
+          —
+        </strong>
+
+      </article>
+
+
+      <article class="stat">
+
+        <span>
+          Season XP
+        </span>
+
+        <strong id="xpStat">
+          —
+        </strong>
+
+      </article>
+
+
+      <article class="stat">
+
+        <span>
+          Rewards Delivered
+        </span>
+
+        <strong id="claimedValue">
+          —
+        </strong>
+
+      </article>
+
+    </section>
+
+
+    <!-- =========================================================
+         BATTLE PASS
+         ========================================================= -->
+
+    <section class="panel battle-pass-panel">
+
+      <div class="section-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            Battle Pass
+          </p>
+
+          <h2>
+            Season Reward Track
+          </h2>
+
+        </div>
+
+
+        <div class="track-status">
+
+          <span class="status-dot"></span>
+
+          <span id="automationStatus">
+            Automatic rewards enabled
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <p class="muted section-description">
+
+        Progression is checked by the addon and eligible rewards
+        are delivered automatically. Players do not need to claim
+        individual tiers.
+
+      </p>
+
+
+      <div
+        id="tiers"
+        class="battle-pass-track"
+        aria-live="polite"
+      ></div>
+
+    </section>
+
+
+    <!-- =========================================================
+         PROGRESS SOURCES
+         ========================================================= -->
+
+    <section class="panel progress-sources-panel">
+
+      <div class="section-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            Progress Sources
+          </p>
+
+          <h2>
+            Season Categories
+          </h2>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="categories"
+        class="category-grid"
+      ></div>
+
+
+      <p class="muted source-note">
+
+        Level progression is synchronized from the player data
+        currently available to the addon. Story, Side Quests,
+        Faction, Exploration and Achievement can be connected
+        through the administrator source builder.
+
+      </p>
+
+    </section>
+
+
+    <!-- =========================================================
+         ADMIN XP
+         ========================================================= -->
+
+    <section class="panel admin-panel">
+
+      <div class="section-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            Administrator
+          </p>
+
+          <h2>
+            Season XP Adjustment
+          </h2>
+
+        </div>
+
+      </div>
+
+
+      <p class="muted">
+
+        Use this for server-side events or progression
+        sources that are not directly exposed through the
+        addon bridge.
+
+      </p>
+
+
+      <div class="xp-controls">
+
+        <input
+          id="xpAdjustment"
+          type="number"
+          min="-100000"
+          max="100000"
+          step="1"
+          value="100"
+          aria-label="Season XP adjustment"
+        />
+
+
+        <button
+          id="addXp"
+          type="button"
+        >
+          Apply XP
+        </button>
+
+      </div>
+
+
+      <div class="season-date-controls">
+
+        <label class="control">
+          <span>Season Start</span>
+          <input
+            id="seasonStart"
+            type="datetime-local"
+            aria-label="Season start date and time"
+          />
+        </label>
+
+        <label class="control">
+          <span>Season End</span>
+          <input
+            id="seasonEnd"
+            type="datetime-local"
+            aria-label="Season end date and time"
+          />
+        </label>
+
+        <button
+          id="saveSeasonDates"
+          type="button"
+          class="secondary"
+        >
+          Save Season Dates
+        </button>
+
+      </div>
+
+
+      <div class="admin-editor-grid">
+
+        <section class="admin-editor-card">
+
+          <div class="editor-heading">
+            <div>
+              <p class="eyebrow">Battle Pass Builder</p>
+              <h3>Edit Tier Rewards</h3>
+            </div>
+            <span class="muted">Server-owner configurable</span>
+          </div>
+
+          <div class="editor-grid">
+
+            <label class="control">
+              <span>Tier</span>
+              <select id="tierEditorSelect"></select>
+            </label>
+
+            <label class="control">
+              <span>Title</span>
+              <input
+                id="tierTitle"
+                type="text"
+                maxlength="120"
+              />
+            </label>
+
+            <label class="control">
+              <span>Category</span>
+              <select id="tierCategory">
+                <option>Level</option>
+                <option>Story</option>
+                <option>Side Quests</option>
+                <option>Faction</option>
+                <option>Exploration</option>
+                <option>Achievement</option>
+              </select>
+            </label>
+
+            <label class="control">
+              <span>Requirement</span>
+              <input
+                id="tierRequirement"
+                type="number"
+                min="0"
+                step="1"
+              />
+            </label>
+
+            <label class="control">
+              <span>Season XP</span>
+              <input
+                id="tierXpRequired"
+                type="number"
+                min="0"
+                step="1"
+              />
+            </label>
+
+            <label class="control">
+              <span>Requirement Key</span>
+              <input
+                id="tierRequirementKey"
+                type="text"
+                maxlength="160"
+                placeholder="Quest / achievement / location ID"
+              />
+            </label>
+
+          </div>
+
+          <div class="reward-editor-header">
+            <div>
+              <strong>Reward Box</strong>
+              <span class="muted">
+                Add one or more rewards to this tier.
+              </span>
+            </div>
+
+            <button
+              id="addReward"
+              type="button"
+              class="secondary"
+            >
+              + Add Reward
+            </button>
+          </div>
+
+          <div
+            id="rewardRows"
+            class="reward-editor-list"
+          ></div>
+
+          <div class="editor-actions">
+
+            <button
+              id="saveTier"
+              type="button"
+            >
+              Save Tier
+            </button>
+
+          </div>
+
+        </section>
+
+
+        <section class="admin-editor-card">
+
+          <div class="editor-heading">
+            <div>
+              <p class="eyebrow">Progress Sources</p>
+              <h3>Category Source Builder</h3>
+            </div>
+
+            <span class="muted">
+              Uses read-only SQL
+            </span>
+          </div>
+
+
+          <label class="control">
+
+            <span>
+              Category
+            </span>
+
+            <select id="categoryEditorSelect">
+
+              <option>
+                Level
+              </option>
+
+              <option>
+                Story
+              </option>
+
+              <option>
+                Side Quests
+              </option>
+
+              <option>
+                Faction
+              </option>
+
+              <option>
+                Exploration
+              </option>
+
+              <option>
+                Achievement
+              </option>
+
+            </select>
+
+          </label>
+
+
+          <label class="check-control">
+
+            <input
+              id="categoryEnabled"
+              type="checkbox"
+            />
+
+            <span>
+              Enable automatic progression for this category
+            </span>
+
+          </label>
+
+
+          <label class="control">
+
+            <span>
+              Display Label
+            </span>
+
+            <input
+              id="categoryLabel"
+              type="text"
+              maxlength="120"
+              placeholder="e.g. Main Story Completion"
+            />
+
+          </label>
+
+
+          <label class="control">
+
+            <span>
+              Value Column
+            </span>
+
+            <input
+              id="categoryValueColumn"
+              type="text"
+              maxlength="80"
+              value="value"
+            />
+
+          </label>
+
+
+          <label class="control">
+
+            <span>
+              Comparison
+            </span>
+
+            <select id="categoryOperator">
+
+              <option value=">=">
+                ≥
+              </option>
+
+              <option value="=">
+                =
+              </option>
+
+              <option value=">">
+                &gt;
+              </option>
+
+              <option value="&lt;">
+                &lt;
+              </option>
+
+              <option value="&lt;=">
+                ≤
+              </option>
+
+              <option value="!=">
+                ≠
+              </option>
+
+            </select>
+
+          </label>
+
+
+          <label class="control">
+
+            <span>
+              Source Query
+            </span>
+
+            <textarea
+              id="categoryQuery"
+              rows="7"
+              spellcheck="false"
+              placeholder="SELECT COUNT(*) AS value FROM ... WHERE player_id = ?"
+            ></textarea>
+
+          </label>
+
+
+          <p class="muted editor-help">
+
+            The query must be read-only and return one row.
+            Use the first <code>?</code> for the selected player ID
+            and the second <code>?</code> for the tier Requirement Key
+            when needed; return numeric progress in the configured
+            value column. Level is built in and does not need SQL.
+
+          </p>
+
+
+          <div class="editor-actions">
+
+            <button
+              id="testCategoryRule"
+              type="button"
+              class="secondary"
+            >
+              Test Source
+            </button>
+
+            <button
+              id="saveCategoryRule"
+              type="button"
+            >
+              Save Source
+            </button>
+
+          </div>
+
+        </section>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         ACTIVITY / SYSTEM
+         ========================================================= -->
+
+    <section class="panel system-panel">
+
+      <div class="section-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            System
+          </p>
+
+          <h2>
+            Activity
+          </h2>
+
+        </div>
+
+      </div>
+
+
+      <pre
+        id="log"
+        class="output"
+      >Ready.</pre>
+
+    </section>
+
+
+    <!-- =========================================================
+         FOOTER
+         ========================================================= -->
+
+    <footer class="ascension-footer">
+
+      <span>
+
+        <img
+          class="footer-fox-icon"
+          src="./assets/vixens.ico"
+          alt=""
+        />
+
+        <strong>
+          FluffyFox Ascension
+        </strong>
+
+      </span>
+
+
+      <span>
+
+        Built by SugarFluff with
+        <span class="heart">💜</span>
+        for the Docker community.
+
+      </span>
+
+
+      <span>
+        Dune Addon · v0.3.1
+      </span>
+
+    </footer>
+
+
+  </main>
+
+
+  <!-- ===========================================================
+       DUNE BRIDGE
+       =========================================================== -->
+
+  <script src="./dune-addon-bridge.js"></script>
+  <script src="./addon.js"></script>
+
+</body>
+
+</html>

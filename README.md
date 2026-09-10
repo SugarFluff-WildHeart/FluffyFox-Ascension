@@ -1,47 +1,101 @@
 # FluffyFox Ascension
 
-**FluffyFox Ascension** is a server-owned seasonal Battle Pass addon for **Dune: Awakening Docker Console**.
+Server-owned seasonal progression and reward tracking for Dune Docker Console.
 
-It adds a configurable seasonal progression and reward system designed for self-hosted Dune: Awakening servers.
+The addon uses Red-Blink's permissioned bridge to read players and keep its own
+Battle Pass state in two `public.dune_battle_pass_*` PostgreSQL tables. It does
+not modify Dune's gameplay/progression tables.
 
-> **Note:** FluffyFox Ascension is an addon for Dune Docker Console. It is not an official Funcom feature or an official Dune: Awakening Battle Pass.
+## Current scope
 
----
+- Active season, XP, tier, and claim tracking
+- Player selection using `players:read`
+- Safe local-preview mode when opened outside the console
+- Idempotent item delivery through `admin.items.grant`
 
-## ✨ What Is FluffyFox Ascension?
+The manifest asks for `database:write` because the first install creates the
+addon-owned tables and claims must be persisted. It also asks for
+`admin:grant-items`, which allows a claim to use Red-Blink's audited,
+idempotent item-delivery bridge. Red-Blink creates a backup before database
+write bridge calls.
 
-FluffyFox Ascension brings a traditional Battle Pass-style progression system to Dune: Awakening servers.
+`web/addon.js` currently uses `WaterBottle_1`, the documented grant example,
+as a safe proof-of-wiring reward. Replace the `TIERS` item IDs and quantities
+with your approved Dune item catalog before publishing the addon.
 
-Players progress through a server-defined seasonal reward track by earning **Season XP** from different types of gameplay activity.
-
-The addon is designed around six progression categories:
-
-- 🆙 **Level**
-- 📖 **Story**
-- ⚔️ **Side Quests**
-- 🏛️ **Faction**
-- 🧭 **Exploration**
-- 🏆 **Achievement**
-
-As players progress through the season, they unlock configurable rewards.
-
-The system is intended to be **server-owned and server-configurable**, allowing individual server owners to decide how their seasonal progression works.
-
----
-
-## 🎟️ Battle Pass Progression
-
-A season consists of a series of tiers.
-
-Example:
+## Repository Layout
 
 ```text
-Season 1
-│
-├── Tier 1   ── 100 Season XP
-├── Tier 2   ── 250 Season XP
-├── Tier 3   ── 500 Season XP
-├── Tier 4   ── 750 Season XP
-├── Tier 5   ── 1,000 Season XP
-│
-└── ...
+addon.json                 Addon identity, version, entry path, and permissions.
+web/                       The addon page shown inside Dune Docker Console.
+web/index.html             Addon HTML entry point.
+web/addon.js               Your addon behavior.
+web/addon.css              Your addon styling.
+web/dune-addon-bridge.js   Small helper for calling console APIs.
+docs/                      Focused docs for building and publishing.
+examples/                  Copyable bridge request examples.
+scripts/                   Validation and optional local packaging tools.
+.github/workflows/         GitHub validation and release packaging.
+```
+
+Most addon developers only need to edit `addon.json` and files under `web/`.
+
+## Quick Start
+
+1. Click **Use this template** on GitHub.
+2. Update `addon.json` with your addon details.
+3. Update `data-addon-id` in `web/index.html` to match `addon.json.id`.
+4. Build your UI in `web/`.
+5. Validate locally:
+
+   ```bash
+   node scripts/validate.js
+   ```
+
+6. Commit and push your addon.
+7. Create a version tag matching `addon.json.version`:
+
+   ```bash
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+
+GitHub Actions will validate, package, create the GitHub Release, and upload the addon zip plus its SHA-256 checksum.
+
+## How Addons Are Listed
+
+There are three repositories involved:
+
+- **Template repo:** this starter project.
+- **Your addon repo:** your addon code and GitHub Releases.
+- **Community addon index:** the reviewed list shown in Dune Docker Console.
+
+Community addon index:
+
+```text
+https://github.com/Red-Blink/dune-docker-addons
+```
+
+When your addon is ready, open a pull request to `dune-docker-addons`. Your PR should add `addons/<your-addon-id>.json` and update `index.json`.
+
+The community index also owns addon lifecycle status, such as `active`, `deprecated`, `unsupported`, `removed`, and `blocked`. Do not put those lifecycle fields in your addon's `addon.json`; they are catalog metadata used by Dune Docker Console to warn users or block unsafe/abandoned addons.
+
+## Docs
+
+- [Getting Started](docs/getting-started.md)
+- [Local Development](docs/local-development.md)
+- [Bridge API](docs/bridge-api.md)
+- [Permissions](docs/permissions.md)
+- [Publishing](docs/publishing.md)
+
+## Local Preview
+
+You can open `web/index.html` directly in a browser for layout work. Use mock data there, then install the addon into a local Dune Docker Console instance to test the real bridge.
+
+See [Local Development](docs/local-development.md) for the full local testing workflow.
+
+For local packaging tests only:
+
+```bash
+bash scripts/package.sh
+```

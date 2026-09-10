@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "dune-battle-pass",
+  "name": "FluffyFox Ascension",
+  "description": "A server-owned seasonal reward track for Dune Docker Console.",
+  "author": "Fluffy Fox",
+  "version": "0.3.1",
+  "type": "ui",
+  "entry": {
+    "navigation": "FluffyFox Ascension",
+    "path": "web/index.html"
+  },
+  "permissions": [
+    "players:read",
+    "database:read",
+    "database:write"
+  ]
+}

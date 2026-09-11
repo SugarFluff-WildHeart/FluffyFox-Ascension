@@ -2,9 +2,9 @@
 
 Server-owned seasonal progression and reward tracking for Dune Docker Console.
 
-The addon uses Red-Blink's permissioned bridge to read players and keep its own
-Battle Pass state in two `public.dune_battle_pass_*` PostgreSQL tables. It does
-not modify Dune's gameplay/progression tables.
+The addon uses Red-Blink's permissioned bridge to read players, inspect
+verified progression, deliver rewards, and keep its own state in addon-owned
+storage. It does not access Dune's database tables.
 
 ## Current scope
 
@@ -13,11 +13,9 @@ not modify Dune's gameplay/progression tables.
 - Safe local-preview mode when opened outside the console
 - Idempotent item delivery through `admin.items.grant`
 
-The manifest asks for `database:write` because the first install creates the
-addon-owned tables and claims must be persisted. It also asks for
-`admin:grant-items`, which allows a claim to use Red-Blink's audited,
-idempotent item-delivery bridge. Red-Blink creates a backup before database
-write bridge calls.
+The manifest asks for addon-owned storage and audited reward delivery. Each
+delivery has a permanent deterministic request ID, so a retry cannot grant a
+reward twice.
 
 `web/addon.js` currently uses `WaterBottle_1`, the documented grant example,
 as a safe proof-of-wiring reward. Replace the `TIERS` item IDs and quantities

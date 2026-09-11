@@ -1331,6 +1331,9 @@ html[data-text-theme="warm"] {
   color: var(--danger);
 }
 
+/* Core-managed storage replaces the legacy SQL rule builder. */
+.admin-editor-grid { display: none; }
+
 
 /* =========================================================
    FOOTER

@@ -7,8 +7,9 @@ const repoRoot = path.resolve(__dirname, "..");
 const manifestPath = path.join(repoRoot, "addon.json");
 const allowedPermissions = new Set([
   "players:read",
-  "database:read",
-  "database:write",
+  "players:message",
+  "files:addon-data",
+  "rewards:grant",
   "server:status",
   "server:restart",
   "files:addon-data",

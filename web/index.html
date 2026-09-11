@@ -72,7 +72,7 @@
               ·
             </span>
 
-            Seasonal progression and automatic rewards.
+            Seasonal progression and safe, idempotent reward delivery.
 
           </p>
 
@@ -438,7 +438,7 @@
           <span class="status-dot"></span>
 
           <span id="automationStatus">
-            Automatic rewards enabled
+            Refresh checks the selected player
           </span>
 
         </div>
@@ -448,9 +448,9 @@
 
       <p class="muted section-description">
 
-        Progression is checked by the addon and eligible rewards
-        are delivered automatically. Players do not need to claim
-        individual tiers.
+        Refresh checks the selected player's verified core progression.
+        Deliver each unlocked tier from this panel; the core safely continues
+        submitted deliveries after the iframe closes.
 
       </p>
 
@@ -708,7 +708,7 @@
             </div>
 
             <span class="muted">
-              Uses read-only SQL
+              Uses core progression capabilities
             </span>
           </div>
 
@@ -758,7 +758,7 @@
             />
 
             <span>
-              Enable automatic progression for this category
+              Enable this verified progression category
             </span>
 
           </label>
@@ -836,14 +836,15 @@
           <label class="control">
 
             <span>
-              Source Query
+              Core support
             </span>
 
             <textarea
               id="categoryQuery"
               rows="7"
               spellcheck="false"
-              placeholder="SELECT COUNT(*) AS value FROM ... WHERE player_id = ?"
+              placeholder="Configured by the Dune Docker Console core"
+              disabled
             ></textarea>
 
           </label>
@@ -851,11 +852,9 @@
 
           <p class="muted editor-help">
 
-            The query must be read-only and return one row.
-            Use the first <code>?</code> for the selected player ID
-            and the second <code>?</code> for the tier Requirement Key
-            when needed; return numeric progress in the configured
-            value column. Level is built in and does not need SQL.
+            Progression categories are enabled only when the core reports
+            that capability as verified. Exploration and Achievement remain
+            disabled until the core provides verification.
 
           </p>
 
@@ -948,7 +947,7 @@
 
 
       <span>
-        Dune Addon · v0.3.1
+        Dune Addon · v0.3.2
       </span>
 
     </footer>

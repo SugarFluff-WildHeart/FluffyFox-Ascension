@@ -1,6 +1,7 @@
 # FluffyFox Ascension
 
 Server-owned seasonal progression and reward tracking for Dune Docker Console.
+Requires **Dune Docker v1.4.13 or newer**.
 
 The addon uses Red-Blink's permissioned bridge to read players, inspect
 verified progression, deliver rewards, and keep its own state in addon-owned
@@ -8,18 +9,23 @@ storage. It does not access Dune's database tables.
 
 ## Current scope
 
-- Active season, XP, tier, and claim tracking
+- Active season, player XP, tier, and claim tracking
 - Player selection using `players:read`
 - Safe local-preview mode when opened outside the console
-- Idempotent item delivery through `admin.items.grant`
+- Idempotent reward delivery through `rewards.deliver`
 
 The manifest asks for addon-owned storage and audited reward delivery. Each
 delivery has a permanent deterministic request ID, so a retry cannot grant a
 reward twice.
 
-`web/addon.js` currently uses `WaterBottle_1`, the documented grant example,
-as a safe proof-of-wiring reward. Replace the `TIERS` item IDs and quantities
-with your approved Dune item catalog before publishing the addon.
+The default track deliberately has no rewards configured. Add only reviewed
+item IDs (or verified Building Set IDs) before publishing a reward-bearing
+season; this prevents a placeholder item from being granted accidentally.
+
+Progression parsing follows the v1.4.13 bridge response: `level.level` and
+`level.xp` are used directly; Story and Side Quest progress are counts of rows
+where `complete === true`; Faction progress is the highest numeric `rank`
+reported by a faction row.
 
 ## Repository Layout
 

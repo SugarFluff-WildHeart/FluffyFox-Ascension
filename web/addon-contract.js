@@ -1,0 +1,61 @@
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  root.FluffyFoxAscensionContract = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+
+  function number(value) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function completedCount(rows) {
+    return Array.isArray(rows) ? rows.filter((row) => row && row.complete === true).length : 0;
+  }
+
+  // Faction rank is the highest numeric `rank` reported by any faction row.
+  // It is a rank state, not a count of completed faction journeys.
+  function factionRank(rows) {
+    if (!Array.isArray(rows)) return 0;
+    return rows.reduce((highest, row) => Math.max(highest, number(row?.rank)), 0);
+  }
+
+  function normalizeProgression(result) {
+    const data = result?.data || result || {};
+    return {
+      capabilities: data.capabilities || {},
+      level: number(data.level?.level),
+      xp: number(data.level?.xp),
+      story: completedCount(data.story),
+      sideQuests: completedCount(data.sideQuests),
+      faction: factionRank(data.faction)
+    };
+  }
+
+  function rewardDeliveryPayload({ requestId, playerId, reward }) {
+    if (!requestId || !playerId || !reward?.type) throw new Error("A reward delivery requires requestId, playerId, and type.");
+    const amount = number(reward.amount);
+    if (amount <= 0) throw new Error("Reward quantity must be greater than zero.");
+    const payload = { requestId, playerId, type: reward.type, amount };
+    if (reward.type === "item") {
+      if (!reward.id) throw new Error("Item rewards require a reviewed item ID.");
+      payload.itemId = reward.id;
+    } else if (reward.type === "building-unlock") {
+      if (!reward.id) throw new Error("Building Set rewards require a reviewed Building Set ID.");
+      payload.buildingSetId = reward.id;
+    }
+    return payload;
+  }
+
+  function seasonState(season, now = new Date()) {
+    const current = now.getTime();
+    const startsAt = season?.startsAt ? Date.parse(season.startsAt) : NaN;
+    const endsAt = season?.endsAt ? Date.parse(season.endsAt) : NaN;
+    if (Number.isFinite(startsAt) && current < startsAt) return "upcoming";
+    if (Number.isFinite(endsAt) && current >= endsAt) return "ended";
+    return "active";
+  }
+
+  return { normalizeProgression, rewardDeliveryPayload, seasonState };
+});

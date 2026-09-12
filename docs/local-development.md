@@ -13,6 +13,7 @@ The normal development loop is:
 ## 1. Build The UI Locally
 
 An addon is a static web page loaded inside Dune Docker Console as an iframe.
+FluffyFox Ascension's secure progression and reward actions require **Dune Docker v1.4.13 or newer**.
 You can use plain HTML, React, Vue, Svelte, Vite, or any other frontend setup as
 long as the final addon package contains:
 
@@ -45,7 +46,7 @@ When your addon is inside Dune Docker Console, calls like this go through the
 real bridge:
 
 ```js
-const result = await window.DuneAddon.request("leadership.players.list");
+const result = await window.DuneAddon.request("players.summary.list");
 ```
 
 When your addon is opened directly in a browser, there is no parent console
@@ -66,8 +67,8 @@ async function loadPlayersForDevelopment() {
     ];
   }
 
-  const result = await window.DuneAddon.request("leadership.players.list");
-  return result.players || result || [];
+  const result = await window.DuneAddon.request("players.summary.list");
+  return result.rows || [];
 }
 ```
 
@@ -173,4 +174,3 @@ The community index repo is:
 ```text
 https://github.com/Red-Blink/dune-docker-addons
 ```
-

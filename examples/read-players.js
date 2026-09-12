@@ -1,4 +1,4 @@
 async function loadPlayers() {
-  const result = await window.DuneAddon.request("leadership.players.list");
-  return result.players || result || [];
+  const result = await window.DuneAddon.request("players.summary.list");
+  return result.rows || [];
 }

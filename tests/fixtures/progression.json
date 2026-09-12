@@ -1,0 +1,7 @@
+{
+  "level": { "level": 18, "xp": 2450 },
+  "story": [{ "id": "journey-a", "complete": true }, { "id": "journey-b", "complete": false }, { "id": "journey-c", "complete": true }],
+  "sideQuests": [{ "id": "side-a", "complete": false }, { "id": "side-b", "complete": true }],
+  "faction": [{ "id": "atreides", "rank": 3 }, { "id": "fremen", "rank": 6 }],
+  "capabilities": { "level": true, "story": true, "sideQuests": { "enabled": true }, "faction": { "available": true } }
+}

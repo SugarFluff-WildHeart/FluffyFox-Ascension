@@ -23,6 +23,10 @@ tier, and reward index. On upgrade, stored legacy delivery IDs are reconciled
 first; a pending or uncertain legacy delivery is never re-submitted under the
 new ID format.
 
+The add-on uses Web Crypto when available and a bundled SHA-256 implementation
+when the Console runs from a plain-HTTP LAN address. Both paths produce the
+same idempotency key.
+
 The default track deliberately has no rewards configured. Add only reviewed
 item IDs (or verified Building Set IDs) before publishing a reward-bearing
 season; this prevents a placeholder item from being granted accidentally.

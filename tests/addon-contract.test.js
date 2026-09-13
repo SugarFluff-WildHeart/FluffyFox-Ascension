@@ -48,6 +48,14 @@ test("hashes very long delivery tuples without exceeding the request-ID limit", 
   assert.ok(requestId.length <= 128);
 });
 
+test("uses the same request ID when Web Crypto is unavailable", async () => {
+  const input = { seasonId: "s1", playerId: "RedBlink#75570", tier: 3, rewardIndex: 0 };
+  const webCryptoRequestId = await deliveryRequestId(input);
+  const plainHttpFallbackRequestId = await deliveryRequestId(input, null);
+  assert.equal(plainHttpFallbackRequestId, webCryptoRequestId);
+  assert.match(plainHttpFallbackRequestId, /^ffa:[a-f0-9]{64}$/);
+});
+
 test("blocks claims outside the active season", () => {
   const now = new Date("2026-09-13T00:00:00.000Z");
   assert.equal(seasonState({ startsAt: "2026-09-14T00:00:00.000Z" }, now), "upcoming");

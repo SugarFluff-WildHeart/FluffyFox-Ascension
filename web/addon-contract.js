@@ -44,9 +44,12 @@
       if (reward.quality !== undefined) payload.quality = reward.quality;
       if (reward.type === "building-unlock") payload.amount = 1;
     } else if (reward.type === "currency") {
-      const currencyId = reward.currencyId || reward.id;
-      if (!currencyId) throw new Error("Currency rewards require a reviewed currency ID.");
-      payload.currencyId = currencyId;
+      const currencyId = reward.currencyId ?? reward.id;
+      const numericCurrencyId = Number(currencyId);
+      if ((typeof currencyId !== "number" && typeof currencyId !== "string") || String(currencyId).trim() === "" || !Number.isInteger(numericCurrencyId) || numericCurrencyId < 0 || numericCurrencyId > 32767) {
+        throw new Error("Currency rewards require a numeric currencyId from 0 through 32767.");
+      }
+      payload.currencyId = numericCurrencyId;
     } else if (reward.type !== "xp" && reward.type !== "intel") {
       throw new Error(`Unsupported reward type: ${reward.type}`);
     }

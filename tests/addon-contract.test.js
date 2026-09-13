@@ -18,8 +18,15 @@ test("normalizes XP and Intel rewards without item fields", () => {
   assert.deepEqual(delivery({ type: "intel", amount: 25 }), { requestId: "season:s1:player:player-1:tier:3:reward:0", playerId: "player-1", type: "intel", amount: 25 });
 });
 
-test("normalizes currency rewards with currencyId", () => {
-  assert.deepEqual(delivery({ type: "currency", currencyId: "solari", amount: 750 }), { requestId: "season:s1:player:player-1:tier:3:reward:0", playerId: "player-1", type: "currency", amount: 750, currencyId: "solari" });
+test("normalizes numeric currency rewards and preserves currency ID zero", () => {
+  assert.deepEqual(delivery({ type: "currency", currencyId: 0, amount: 750 }), { requestId: "season:s1:player:player-1:tier:3:reward:0", playerId: "player-1", type: "currency", amount: 750, currencyId: 0 });
+  assert.deepEqual(delivery({ type: "currency", currencyId: "32767", amount: 1 }), { requestId: "season:s1:player:player-1:tier:3:reward:0", playerId: "player-1", type: "currency", amount: 1, currencyId: 32767 });
+});
+
+test("rejects non-numeric and out-of-range currency IDs", () => {
+  assert.throws(() => delivery({ type: "currency", currencyId: "solari", amount: 750 }), /numeric currencyId/);
+  assert.throws(() => delivery({ type: "currency", currencyId: 32768, amount: 750 }), /numeric currencyId/);
+  assert.throws(() => delivery({ type: "currency", id: null, amount: 750 }), /numeric currencyId/);
 });
 
 test("normalizes Building Set rewards as one itemId unlock", () => {

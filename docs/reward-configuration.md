@@ -39,7 +39,7 @@ Each tier uses a verified progression category and one or more rewards:
 | `item` | `id`, `amount` | `id` is delivered as `itemId`; `quality` is optional. |
 | `xp` | `amount` | No item identifier is sent. |
 | `intel` | `amount` | No item identifier is sent. |
-| `currency` | `currencyId`, `amount` | Currency ID is forwarded as `currencyId`. |
+| `currency` | `currencyId`, `amount` | `currencyId` must be an integer from `0` through `32767`; it is forwarded as `currencyId`. |
 | `building-unlock` | `id` | `id` is delivered as `itemId`; delivery always uses `amount: 1`. |
 
 Use the Console-supported addon configuration/storage workflow to write this

@@ -56,6 +56,17 @@
     return payload;
   }
 
+  async function deliveryRequestId({ seasonId, playerId, tier, rewardIndex }) {
+    if (seasonId === undefined || playerId === undefined || tier === undefined || rewardIndex === undefined) {
+      throw new Error("A delivery request ID requires seasonId, playerId, tier, and rewardIndex.");
+    }
+    if (!globalThis.crypto?.subtle) throw new Error("Secure hashing is unavailable in this browser context.");
+    const tuple = JSON.stringify([String(seasonId), String(playerId), String(tier), String(rewardIndex)]);
+    const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(tuple));
+    const hex = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+    return `ffa:${hex}`;
+  }
+
   function seasonState(season, now = new Date()) {
     const current = now.getTime();
     const startsAt = season?.startsAt ? Date.parse(season.startsAt) : NaN;
@@ -65,5 +76,5 @@
     return "active";
   }
 
-  return { normalizeProgression, rewardDeliveryPayload, seasonState };
+  return { normalizeProgression, rewardDeliveryPayload, deliveryRequestId, seasonState };
 });

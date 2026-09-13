@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fixture = require("./fixtures/progression.json");
-const { normalizeProgression, rewardDeliveryPayload, seasonState } = require("../web/addon-contract.js");
+const { normalizeProgression, rewardDeliveryPayload, deliveryRequestId, seasonState } = require("../web/addon-contract.js");
 
 test("normalizes the v1.4.13 progression response without coercing arrays", () => {
   assert.deepEqual(normalizeProgression(fixture), { capabilities: fixture.capabilities, level: 18, xp: 2450, story: 2, sideQuests: 1, faction: 6 });
@@ -31,6 +31,21 @@ test("rejects non-numeric and out-of-range currency IDs", () => {
 
 test("normalizes Building Set rewards as one itemId unlock", () => {
   assert.deepEqual(delivery({ type: "building-unlock", id: "Reviewed_Building_Set_7", amount: 99, quality: 2 }), { requestId: "season:s1:player:player-1:tier:3:reward:0", playerId: "player-1", type: "building-unlock", amount: 1, itemId: "Reviewed_Building_Set_7", quality: 2 });
+});
+
+test("hashes request IDs with allowed fixed-length characters for player IDs containing #", async () => {
+  const input = { seasonId: "s1", playerId: "RedBlink#75570", tier: 3, rewardIndex: 0 };
+  const requestId = await deliveryRequestId(input);
+  assert.match(requestId, /^ffa:[a-f0-9]{64}$/);
+  assert.equal(requestId.length, 68);
+  assert.equal(await deliveryRequestId(input), requestId);
+  assert.notEqual(await deliveryRequestId({ ...input, playerId: "RedBlink75570" }), requestId);
+});
+
+test("hashes very long delivery tuples without exceeding the request-ID limit", async () => {
+  const requestId = await deliveryRequestId({ seasonId: "season-".repeat(100), playerId: `player-${"x".repeat(5000)}`, tier: 999999, rewardIndex: 999999 });
+  assert.match(requestId, /^ffa:[a-f0-9]{64}$/);
+  assert.ok(requestId.length <= 128);
 });
 
 test("blocks claims outside the active season", () => {

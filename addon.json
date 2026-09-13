@@ -4,7 +4,7 @@
   "name": "FluffyFox Ascension",
   "description": "A server-owned seasonal reward track for Dune Docker Console.",
   "author": "Fluffy Fox",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "type": "ui",
   "entry": {
     "navigation": "FluffyFox Ascension",

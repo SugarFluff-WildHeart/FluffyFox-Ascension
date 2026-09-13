@@ -59,3 +59,14 @@ above. Reload the add-on afterwards. Do not edit database tables or Console
 state files. Every change should be tested on a non-production player first.
 The add-on keeps reward buttons disabled until a tier contains at least one
 reviewed reward.
+
+## Delivery ID migration
+
+Version 0.3.6 uses an `ffa:`-prefixed SHA-256 request ID generated from the
+season ID, player ID, tier, and reward index. This prevents invalid characters
+or overly long player IDs from reaching the reward service.
+
+When upgrading, open the add-on and allow it to refresh each affected player
+before submitting any new claims. Existing legacy delivery records are checked
+first. Pending or uncertain legacy records are retained for review and are not
+re-submitted under a new request ID.

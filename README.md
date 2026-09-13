@@ -18,6 +18,11 @@ The manifest asks for addon-owned storage and audited reward delivery. Each
 delivery has a permanent deterministic request ID, so a retry cannot grant a
 reward twice.
 
+Request IDs use a fixed-length `ffa:` SHA-256 digest of the season, player,
+tier, and reward index. On upgrade, stored legacy delivery IDs are reconciled
+first; a pending or uncertain legacy delivery is never re-submitted under the
+new ID format.
+
 The default track deliberately has no rewards configured. Add only reviewed
 item IDs (or verified Building Set IDs) before publishing a reward-bearing
 season; this prevents a placeholder item from being granted accidentally.

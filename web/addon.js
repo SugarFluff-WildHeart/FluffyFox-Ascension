@@ -1,6 +1,6 @@
 (function () {
   "use strict";
-  const VERSION = "0.3.5";
+  const VERSION = "0.3.6";
   const Contract = window.FluffyFoxAscensionContract;
   const store = { active: "ascension:active-season", season: (id) => `ascension:season:${id}`, tiers: (id) => `ascension:season:${id}:tiers`, categories: (id) => `ascension:season:${id}:categories`, progress: (seasonId, playerId) => `ascension:season:${seasonId}:player:${playerId}:progress` };
   const DEFAULT_SEASON = { id: "s1", name: "Arrakis Rising", startsAt: "2026-09-12T00:00:00.000Z", endsAt: null };
@@ -24,7 +24,10 @@
   function value(category) { return Number(state.progression[category.id === "side-quest" ? "sideQuests" : category.id] || 0); }
   function eligible(tier) { const category = state.categories.find((entry) => entry.id === tier.category); return seasonStatus() === "active" && Boolean(category?.enabled && enabled(category.progressionKey) && value(category) >= Number(tier.requirement || 0)); }
   function done(tier) { return state.progress.completedTiers.includes(tier.tier); }
-  function deliveryId(playerId, tier, rewardIndex) { return `season:${state.season.id}:player:${playerId}:tier:${tier.tier}:reward:${rewardIndex}`; }
+  function legacyDeliveryId(playerId, tier, rewardIndex) { return `season:${state.season.id}:player:${playerId}:tier:${tier.tier}:reward:${rewardIndex}`; }
+  async function deliveryId(playerId, tier, rewardIndex) { return Contract.deliveryRequestId({ seasonId: state.season.id, playerId, tier: tier.tier, rewardIndex }); }
+  async function deliveryKeys(playerId, tier, rewardIndex) { return { current: await deliveryId(playerId, tier, rewardIndex), legacy: legacyDeliveryId(playerId, tier, rewardIndex) }; }
+  function storedDelivery(keys) { return state.progress.deliveries[keys.current] ? { requestId: keys.current, delivery: state.progress.deliveries[keys.current] } : state.progress.deliveries[keys.legacy] ? { requestId: keys.legacy, delivery: state.progress.deliveries[keys.legacy] } : null; }
   function safeTiers(tiers) { if (!Array.isArray(tiers)) return DEFAULT_TIERS; return tiers.map((tier) => ({ ...tier, rewards: Array.isArray(tier.rewards) ? tier.rewards.filter((reward) => reward?.id !== "WaterBottle_1") : [] })); }
 
   async function ensureStorage() { const existing = await get(store.active); if (existing?.id) return existing; await put(store.active, DEFAULT_SEASON); await Promise.all([put(store.season(DEFAULT_SEASON.id), DEFAULT_SEASON), put(store.tiers(DEFAULT_SEASON.id), DEFAULT_TIERS), put(store.categories(DEFAULT_SEASON.id), DEFAULT_CATEGORIES)]); log("Created the default season in addon storage."); return DEFAULT_SEASON; }
@@ -44,9 +47,54 @@
     for (const tier of state.tiers) { const card = document.createElement("article"), unlockedTier = eligible(tier), complete = done(tier), hasRewards = tier.rewards.length > 0; card.className = `tier ${unlockedTier ? "unlocked" : "locked"}`; const rewardText = hasRewards ? tier.rewards.map((reward) => `${reward.label || reward.id} ×${reward.amount}`).join(", ") : "No reviewed reward configured"; card.innerHTML = `<span class="tier-number">${tier.tier}</span><div><h3>${escape(tier.title)}</h3><p>${escape(tier.category)} · ${tier.requirement} required · ${escape(rewardText)}</p></div>`; const button = document.createElement("button"); button.type = "button"; button.disabled = !currentPlayer() || !unlockedTier || complete || !hasRewards; button.textContent = complete ? "Delivered" : !hasRewards ? "Reward setup required" : status === "upcoming" ? "Season not started" : status === "ended" ? "Season ended" : unlockedTier ? "Deliver rewards" : "Locked"; button.onclick = () => deliver(tier); card.append(button); root.append(card); }
     const categories = $("#categories"); if (!categories) return; categories.replaceChildren(); state.categories.forEach((category) => { const supported = category.enabled && enabled(category.progressionKey), card = document.createElement("article"); card.className = "category"; card.innerHTML = `<strong>${escape(category.label)}</strong><span class="category-state ${supported ? "available" : "pending"}">${supported ? `Available · ${value(category)}` : escape(category.reason || "Not verified by the core")}</span>`; categories.append(card); });
   }
-  async function deliver(tier) { const player = currentPlayer(); if (!player || !tier.rewards.length || done(tier)) return; if (seasonStatus() !== "active") { log("Reward claims are unavailable outside the active season.", true); render(); return; } if (!eligible(tier)) return; let delivered = true; for (const [index, reward] of tier.rewards.entries()) { const requestId = deliveryId(player.playerId, tier, index), result = await request("rewards.deliver", Contract.rewardDeliveryPayload({ requestId, playerId: player.playerId, reward })), status = result?.status || "uncertain"; state.progress.deliveries[requestId] = { status, updatedAt: new Date().toISOString() }; if (status === "delivered") await notifyDelivered(player, requestId, reward); else { delivered = false; log(status === "pending" ? `Tier ${tier.tier} is queued for delivery.` : `Tier ${tier.tier} needs manual delivery review.`, status === "uncertain"); } } if (delivered) { state.progress.completedTiers = [...new Set([...state.progress.completedTiers, tier.tier])]; log(`Tier ${tier.tier} delivered to ${name(player)}.`); } await put(store.progress(state.season.id, player.playerId), state.progress); render(); }
+  async function deliver(tier) {
+    const player = currentPlayer(); if (!player || !tier.rewards.length || done(tier)) return;
+    if (seasonStatus() !== "active") { log("Reward claims are unavailable outside the active season.", true); render(); return; }
+    if (!eligible(tier)) return;
+    let delivered = true;
+    try {
+      for (const [index, reward] of tier.rewards.entries()) {
+        const keys = await deliveryKeys(player.playerId, tier, index);
+        const existing = storedDelivery(keys);
+        if (existing) {
+          if (existing.delivery.status === "delivered") await notifyDelivered(player, existing.requestId, reward);
+          else { delivered = false; log(existing.delivery.status === "pending" ? `Tier ${tier.tier} has a legacy or current reward queued for delivery.` : `Tier ${tier.tier} has a reward requiring manual delivery review.`, existing.delivery.status === "uncertain"); }
+          continue;
+        }
+        const result = await request("rewards.deliver", Contract.rewardDeliveryPayload({ requestId: keys.current, playerId: player.playerId, reward }));
+        const status = result?.status || "uncertain";
+        state.progress.deliveries[keys.current] = { status, updatedAt: new Date().toISOString() };
+        await put(store.progress(state.season.id, player.playerId), state.progress);
+        if (status === "delivered") await notifyDelivered(player, keys.current, reward);
+        else { delivered = false; log(status === "pending" ? `Tier ${tier.tier} is queued for delivery.` : `Tier ${tier.tier} needs manual delivery review.`, status === "uncertain"); }
+      }
+      if (delivered) { state.progress.completedTiers = [...new Set([...state.progress.completedTiers, tier.tier])]; await put(store.progress(state.season.id, player.playerId), state.progress); log(`Tier ${tier.tier} delivered to ${name(player)}.`); }
+    } catch (error) {
+      try { await put(store.progress(state.season.id, player.playerId), state.progress); } catch (saveError) { log(`Could not persist delivery progress: ${saveError.message}`, true); }
+      log(`Tier ${tier.tier} delivery failed: ${error.message}`, true);
+    }
+    render();
+  }
   async function notifyDelivered(player, requestId, reward) { const delivery = state.progress.deliveries[requestId]; if (delivery.messageSubmitted) return; try { await request("players.message.send", { requestId: `${requestId}:message`, playerId: player.playerId, message: `FluffyFox Ascension reward delivered: ${reward.label || reward.id}.` }); delivery.messageSubmitted = true; } catch (error) { log(`Reward was delivered, but its private notification could not be submitted: ${error.message}`); } }
-  async function reconcileDeliveries(player) { let changed = false; for (const [requestId, delivery] of Object.entries(state.progress.deliveries)) { if (delivery.status !== "pending") continue; let status; try { status = (await request("rewards.status", { requestId }))?.status || "uncertain"; } catch (error) { log(`Could not check queued reward status: ${error.message}`, true); continue; } if (status !== delivery.status) { delivery.status = status; delivery.updatedAt = new Date().toISOString(); changed = true; } if (status === "uncertain") log("A queued reward needs manual delivery review.", true); } for (const tier of state.tiers) { if (done(tier)) continue; const requestIds = tier.rewards.map((_, index) => deliveryId(player.playerId, tier, index)); if (!requestIds.length || !requestIds.every((requestId) => state.progress.deliveries[requestId]?.status === "delivered")) continue; for (const [index, reward] of tier.rewards.entries()) await notifyDelivered(player, requestIds[index], reward); state.progress.completedTiers.push(tier.tier); changed = true; log(`Queued Tier ${tier.tier} reward delivery completed for ${name(player)}.`); } if (changed) await put(store.progress(state.season.id, player.playerId), state.progress); }
+  async function reconcileDeliveries(player) {
+    let changed = false;
+    for (const [requestId, delivery] of Object.entries(state.progress.deliveries)) {
+      if (delivery.status !== "pending") continue;
+      let status;
+      try { status = (await request("rewards.status", { requestId }))?.status || "uncertain"; }
+      catch (error) { log(`Could not check queued reward status: ${error.message}`, true); continue; }
+      if (status !== delivery.status) { delivery.status = status; delivery.updatedAt = new Date().toISOString(); changed = true; }
+      if (status === "uncertain") log("A queued reward needs manual delivery review.", true);
+    }
+    for (const tier of state.tiers) {
+      if (done(tier)) continue;
+      const records = await Promise.all(tier.rewards.map(async (reward, index) => ({ reward, existing: storedDelivery(await deliveryKeys(player.playerId, tier, index)) })));
+      if (!records.length || !records.every(({ existing }) => existing?.delivery.status === "delivered")) continue;
+      for (const { reward, existing } of records) await notifyDelivered(player, existing.requestId, reward);
+      state.progress.completedTiers.push(tier.tier); changed = true; log(`Queued Tier ${tier.tier} reward delivery completed for ${name(player)}.`);
+    }
+    if (changed) await put(store.progress(state.season.id, player.playerId), state.progress);
+  }
   async function saveDates() { if (!state.season) return; state.season.startsAt = $("#seasonStart")?.value ? new Date($("#seasonStart").value).toISOString() : null; state.season.endsAt = $("#seasonEnd")?.value ? new Date($("#seasonEnd").value).toISOString() : null; if (state.season.startsAt && state.season.endsAt && Date.parse(state.season.endsAt) <= Date.parse(state.season.startsAt)) throw new Error("Season end must be after its start."); await put(store.active, state.season); await put(store.season(state.season.id), state.season); $("#seasonDates").textContent = formatDates(state.season); log("Season dates saved in addon storage."); render(); }
   function applyAppearance() { const opacity = Math.min(96, Math.max(35, Number($("#backgroundOpacity").value))), blur = Math.min(28, Math.max(4, Number($("#backgroundBlur").value))), theme = THEMES[$("#colorPreset").value] || THEMES.gold, root = document.documentElement; root.style.setProperty("--ui-opacity", (opacity / 100).toFixed(2)); root.style.setProperty("--ui-blur", `${blur}px`); ["--text", "--muted", "--accent", "--accent-dark", "--accent-rgb"].forEach((key, index) => root.style.setProperty(key, theme[index])); $("#opacityValue").textContent = `${opacity}%`; $("#blurValue").textContent = `${blur}px`; localStorage.setItem("fluffyfox-ui-opacity", String(opacity)); localStorage.setItem("fluffyfox-ui-blur", String(blur)); localStorage.setItem("fluffyfox-text-theme", $("#colorPreset").value); }
   function loadAppearance() { const opacity = localStorage.getItem("fluffyfox-ui-opacity"), blur = localStorage.getItem("fluffyfox-ui-blur"), theme = localStorage.getItem("fluffyfox-text-theme"); if (opacity) $("#backgroundOpacity").value = opacity; if (blur) $("#backgroundBlur").value = blur; if (theme && THEMES[theme]) $("#colorPreset").value = theme; applyAppearance(); }

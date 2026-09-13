@@ -38,12 +38,17 @@
     const amount = number(reward.amount);
     if (amount <= 0) throw new Error("Reward quantity must be greater than zero.");
     const payload = { requestId, playerId, type: reward.type, amount };
-    if (reward.type === "item") {
-      if (!reward.id) throw new Error("Item rewards require a reviewed item ID.");
+    if (reward.type === "item" || reward.type === "building-unlock") {
+      if (!reward.id) throw new Error(`${reward.type} rewards require a reviewed item ID.`);
       payload.itemId = reward.id;
-    } else if (reward.type === "building-unlock") {
-      if (!reward.id) throw new Error("Building Set rewards require a reviewed Building Set ID.");
-      payload.buildingSetId = reward.id;
+      if (reward.quality !== undefined) payload.quality = reward.quality;
+      if (reward.type === "building-unlock") payload.amount = 1;
+    } else if (reward.type === "currency") {
+      const currencyId = reward.currencyId || reward.id;
+      if (!currencyId) throw new Error("Currency rewards require a reviewed currency ID.");
+      payload.currencyId = currencyId;
+    } else if (reward.type !== "xp" && reward.type !== "intel") {
+      throw new Error(`Unsupported reward type: ${reward.type}`);
     }
     return payload;
   }

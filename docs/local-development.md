@@ -87,65 +87,20 @@ This checks `addon.json`, the entry path, and requested permissions.
 
 ## 4. Test Privately In Dune Docker Console
 
-To test the real bridge, copy your addon into a local Dune Docker Console
-install. You do not need the community addon index for this.
+Install the add-on through the Dune Docker Console **Addons** screen, then
+enable it there and approve the requested scoped permissions. Do not edit
+Console state files directly; the Console owns installation, enablement, and
+permission approval state.
 
-Replace `my-dune-addon` with your real `addon.json` ID:
-
-```bash
-CONSOLE_DIR="$HOME/dune-awakening-selfhost-docker"
-ADDON_ID="my-dune-addon"
-
-mkdir -p "$CONSOLE_DIR/runtime/addons/installed/$ADDON_ID"
-cp -a addon.json web "$CONSOLE_DIR/runtime/addons/installed/$ADDON_ID/"
-```
-
-Then enable it and approve the permissions you are testing:
-
-```bash
-cd "$CONSOLE_DIR"
-
-python3 - <<'PY'
-import json
-from pathlib import Path
-
-addon_id = "my-dune-addon"
-permissions = ["players:read", "database:read"]
-
-state_path = Path("runtime/addons/state.json")
-state_path.parent.mkdir(parents=True, exist_ok=True)
-
-try:
-    state = json.loads(state_path.read_text())
-except Exception:
-    state = {}
-
-state[addon_id] = {
-    "enabled": True,
-    "approvedPermissions": permissions
-}
-
-state_path.write_text(json.dumps(state, indent=2) + "\n")
-PY
-```
-
-Refresh Dune Docker Console and open **Addons**. Your addon should appear as an
-installed addon. Open it there to test the real bridge.
+Open the installed add-on from the Console to test the real bridge. Verify
+player rows, progression capability flags, a non-delivery refresh, and one
+test reward using a reviewed identifier on a non-production player.
 
 ## 5. Updating Your Local Test Copy
 
-After making changes, copy the addon files again:
-
-```bash
-CONSOLE_DIR="$HOME/dune-awakening-selfhost-docker"
-ADDON_ID="my-dune-addon"
-
-rm -rf "$CONSOLE_DIR/runtime/addons/installed/$ADDON_ID"
-mkdir -p "$CONSOLE_DIR/runtime/addons/installed/$ADDON_ID"
-cp -a addon.json web "$CONSOLE_DIR/runtime/addons/installed/$ADDON_ID/"
-```
-
-Then refresh the console page.
+After making changes, use the Console's add-on update or reinstall flow, then
+refresh the Console page. Do not replace files in the Console runtime or edit
+its state files directly.
 
 ## 6. Package Locally
 

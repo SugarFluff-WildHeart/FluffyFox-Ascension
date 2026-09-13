@@ -1,41 +1,26 @@
 # Permissions
 
-Server owners review addon permissions before installing an addon. Keep permissions narrow and easy to understand.
+FluffyFox Ascension requires **Dune Docker v1.4.13 or newer**. The Console
+asks the server owner to approve these scoped permissions during installation.
+The add-on does not request database access.
 
-## Supported Permission Keys
-
-| Permission | Allows |
+| Permission | Used for |
 | --- | --- |
-| `players:read` | Read player summary data exposed by the console. |
-| `database:read` | Run read-only database queries through the console bridge. |
-| `database:write` | Run write database statements through the console bridge. The console creates a database backup first. |
-| `server:status` | Reserved for reading server status data. |
-| `server:restart` | Reserved for restarting services. |
-| `files:addon-data` | Reserved for storing addon-owned data. |
-| `broadcast:send` | Reserved for sending in-game broadcasts. |
+| `players:read` | Load `players.summary.list` rows and verified player progression. |
+| `files:addon-data` | Store seasons, tier rewards, and delivery state in isolated addon storage. |
+| `rewards:grant` | Submit idempotent item, XP, Intel, currency, and Building Set deliveries. |
+| `players:message` | Send optional private delivery notifications. |
 
-## Examples
-
-Read players only:
+Do not add `database:read` or `database:write`. Seasons and reward state use
+`addon.storage.*`, never Console database queries or state-file edits.
 
 ```json
-"permissions": {
-  "players": ["read"]
-}
-```
-
-Read database only:
-
-```json
-"permissions": {
-  "database": ["read"]
-}
-```
-
-Read and write database:
-
-```json
-"permissions": {
-  "database": ["read", "write"]
+{
+  "permissions": [
+    "players:read",
+    "files:addon-data",
+    "rewards:grant",
+    "players:message"
+  ]
 }
 ```

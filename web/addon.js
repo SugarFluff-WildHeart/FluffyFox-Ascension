@@ -1,6 +1,6 @@
 (function () {
   "use strict";
-  const VERSION = "0.3.3";
+  const VERSION = "0.3.4";
   const Contract = window.FluffyFoxAscensionContract;
   const store = { active: "ascension:active-season", season: (id) => `ascension:season:${id}`, tiers: (id) => `ascension:season:${id}:tiers`, categories: (id) => `ascension:season:${id}:categories`, progress: (seasonId, playerId) => `ascension:season:${seasonId}:player:${playerId}:progress` };
   const DEFAULT_SEASON = { id: "s1", name: "Arrakis Rising", startsAt: "2026-09-12T00:00:00.000Z", endsAt: null };

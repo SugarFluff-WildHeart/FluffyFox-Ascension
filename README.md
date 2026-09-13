@@ -22,6 +22,9 @@ The default track deliberately has no rewards configured. Add only reviewed
 item IDs (or verified Building Set IDs) before publishing a reward-bearing
 season; this prevents a placeholder item from being granted accidentally.
 
+See [Reward Configuration](docs/reward-configuration.md) for the supported
+tier format and reward contract.
+
 Progression parsing follows the v1.4.13 bridge response: `level.level` and
 `level.xp` are used directly; Story and Side Quest progress are counts of rows
 where `complete === true`; Faction progress is the highest numeric `rank`

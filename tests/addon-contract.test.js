@@ -7,8 +7,23 @@ test("normalizes the v1.4.13 progression response without coercing arrays", () =
   assert.deepEqual(normalizeProgression(fixture), { capabilities: fixture.capabilities, level: 18, xp: 2450, story: 2, sideQuests: 1, faction: 6 });
 });
 
-test("uses the exact item reward delivery contract", () => {
-  assert.deepEqual(rewardDeliveryPayload({ requestId: "season:s1:player:player-1:tier:3:reward:0", playerId: "player-1", reward: { type: "item", id: "Reviewed_Item_123", amount: 2 } }), { requestId: "season:s1:player:player-1:tier:3:reward:0", playerId: "player-1", type: "item", itemId: "Reviewed_Item_123", amount: 2 });
+const delivery = (reward) => rewardDeliveryPayload({ requestId: "season:s1:player:player-1:tier:3:reward:0", playerId: "player-1", reward });
+
+test("normalizes an item reward with optional quality", () => {
+  assert.deepEqual(delivery({ type: "item", id: "Reviewed_Item_123", amount: 2, quality: 5 }), { requestId: "season:s1:player:player-1:tier:3:reward:0", playerId: "player-1", type: "item", itemId: "Reviewed_Item_123", amount: 2, quality: 5 });
+});
+
+test("normalizes XP and Intel rewards without item fields", () => {
+  assert.deepEqual(delivery({ type: "xp", amount: 100 }), { requestId: "season:s1:player:player-1:tier:3:reward:0", playerId: "player-1", type: "xp", amount: 100 });
+  assert.deepEqual(delivery({ type: "intel", amount: 25 }), { requestId: "season:s1:player:player-1:tier:3:reward:0", playerId: "player-1", type: "intel", amount: 25 });
+});
+
+test("normalizes currency rewards with currencyId", () => {
+  assert.deepEqual(delivery({ type: "currency", currencyId: "solari", amount: 750 }), { requestId: "season:s1:player:player-1:tier:3:reward:0", playerId: "player-1", type: "currency", amount: 750, currencyId: "solari" });
+});
+
+test("normalizes Building Set rewards as one itemId unlock", () => {
+  assert.deepEqual(delivery({ type: "building-unlock", id: "Reviewed_Building_Set_7", amount: 99, quality: 2 }), { requestId: "season:s1:player:player-1:tier:3:reward:0", playerId: "player-1", type: "building-unlock", amount: 1, itemId: "Reviewed_Building_Set_7", quality: 2 });
 });
 
 test("blocks claims outside the active season", () => {

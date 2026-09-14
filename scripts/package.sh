@@ -28,10 +28,18 @@ zip -r "dist/${PACKAGE_NAME}" addon.json web -x "*.DS_Store" >/dev/null
 echo "Created: dist/${PACKAGE_NAME}"
 
 if command -v sha256sum >/dev/null 2>&1; then
-  sha256sum "dist/${PACKAGE_NAME}" | tee "dist/${PACKAGE_NAME}.sha256"
+  (
+    cd dist
+    sha256sum "$PACKAGE_NAME" > "${PACKAGE_NAME}.sha256"
+  )
 elif command -v shasum >/dev/null 2>&1; then
-  shasum -a 256 "dist/${PACKAGE_NAME}" | tee "dist/${PACKAGE_NAME}.sha256"
+  (
+    cd dist
+    shasum -a 256 "$PACKAGE_NAME" > "${PACKAGE_NAME}.sha256"
+  )
 else
   echo "Install sha256sum or shasum to calculate the release hash." >&2
   exit 1
 fi
+
+cat "dist/${PACKAGE_NAME}.sha256"

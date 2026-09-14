@@ -36,6 +36,14 @@ jobs:
       - name: Package addon
         run: bash scripts/package.sh
 
+      - name: Verify release checksum
+        run: |
+          PACKAGE_NAME="$(node -e "const addon=require('./addon.json'); process.stdout.write(addon.id + '-' + addon.version + '.zip')")"
+          (
+            cd dist
+            sha256sum -c "$PACKAGE_NAME.sha256"
+          )
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
